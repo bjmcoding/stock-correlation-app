@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, date
 import re
 import time
 import traceback
-from scipy.cluster import hierarchy # <<< Added for clustering
+from scipy.cluster import hierarchy # For clustering
 
 # --- Page Configuration ---
 st.set_page_config(layout="wide", page_title="Stock Correlation Matrix")
@@ -111,7 +111,8 @@ def fetch_max_stock_data(tickers_tuple):
 if 'run_analysis_clicked' not in st.session_state: st.session_state.run_analysis_clicked = False
 if 'tickers_for_analysis' not in st.session_state: st.session_state.tickers_for_analysis = []
 if 'fetch_log_messages' not in st.session_state: st.session_state.fetch_log_messages = []
-if 'cluster_map' not in st.session_state: st.session_state.cluster_map = False # <<< Initialize cluster state >>>
+# --- !!! Set cluster_map default to True !!! ---
+if 'cluster_map' not in st.session_state: st.session_state.cluster_map = True
 
 end_date_default = MAX_FETCH_END_DATE
 start_date_default = max(MAX_FETCH_START_DATE, end_date_default - timedelta(days=365))
@@ -153,7 +154,9 @@ col1, col2 = st.columns([1, 2]) # Input column (33%), Output column (67%)
 
 with col1:
     st.subheader("Inputs")
-    default_tickers_str = "MSFT, GOOGL, NVDA, TSLA, AMZN, JPM, XOM, JNJ, HOOD, LMND, SPY, WMT"
+    # --- !!! UPDATED DEFAULT TICKERS !!! ---
+    default_tickers_str = "LMND, HIMS, SOFI, UPST, NVDA, PLTR, TSLA, HOOD, COIN, GOOG, AMZN, NU"
+    # --- !!! END UPDATED TICKERS !!! ---
     ticker_input_str = st.text_area(
         "1. Enter Stock Tickers:", value=default_tickers_str, height=150, key="ticker_input",
         help="Separate tickers with spaces, commas, semicolons, or newlines."
@@ -172,10 +175,11 @@ with col1:
         min_end_allowed_precise = st.session_state.start_date + timedelta(days=1)
         st.date_input("End Date", min_value=min_end_allowed_precise, max_value=MAX_FETCH_END_DATE, key="end_date")
 
-    # --- Analysis Options --- <<< ADDED CLUSTER OPTION >>>
+    # --- Display Options ---
     st.markdown("3. Display Options:")
-    st.checkbox("Cluster Heatmap (Group Similar Stocks)", key='cluster_map')
-    # --- END ANALYSIS OPTIONS ---
+    # --- !!! Set default value for checkbox to True !!! ---
+    st.checkbox("Cluster Heatmap (Group Similar Stocks)", key='cluster_map', value=st.session_state.cluster_map)
+    # --- !!! END CHECKBOX DEFAULT ---
 
     st.markdown("---")
     run_button_clicked = st.button("Run Analysis", type="primary", key="run_button")
@@ -210,7 +214,7 @@ with col2:
         start_date_selected = st.session_state.start_date
         end_date_selected = st.session_state.end_date
         corr_method = 'pearson' # Hardcoded
-        cluster_map = st.session_state.cluster_map # <<< Get cluster option >>>
+        cluster_map = st.session_state.cluster_map # Get cluster option from state
 
         with analysis_placeholder.container():
             with st.spinner(f"Running analysis for {len(tickers)} tickers..."):
@@ -248,15 +252,14 @@ with col2:
                         corr_matrix = returns_df_cleaned_any.corr(method=corr_method)
                         st.session_state.correlation_matrix_result = corr_matrix
 
-                        # --- Clustering (Optional) --- <<< ADDED >>>
+                        # --- Clustering (Optional) ---
                         plot_order = corr_matrix.columns # Default order
                         if cluster_map and len(corr_matrix.columns) > 2:
                             try:
-                                # Convert correlation to distance (1 - correlation) for clustering
-                                dists = 1 - corr_matrix.values
+                                dists = 1 - corr_matrix.values # Distance = 1 - correlation
                                 linkage = hierarchy.linkage(dists, method='average')
                                 dendro = hierarchy.dendrogram(linkage, no_plot=True)
-                                plot_order = [corr_matrix.columns[i] for i in dendro['leaves']] # Get clustered order
+                                plot_order = [corr_matrix.columns[i] for i in dendro['leaves']]
                             except Exception as cluster_err:
                                 st.warning(f"Clustering failed: {cluster_err}. Displaying in original order.")
                                 plot_order = corr_matrix.columns
