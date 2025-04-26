@@ -1,0 +1,7 @@
+# Stock Matrix App Dependencies
+streamlit
+yfinance
+pandas
+numpy
+plotly
+scipy
