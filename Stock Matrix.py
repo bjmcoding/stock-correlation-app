@@ -132,7 +132,7 @@ col1, col2 = st.columns([1, 2]) # Input column (33%), Output column (67%)
 with col1:
     st.subheader("Inputs")
     # --- !!! UPDATED DEFAULT TICKERS !!! ---
-    default_tickers_str = "LMND, HIMS, SOFI, UPST, NVDA, PLTR, TSLA, HOOD, COIN, GOOG, AMZN, NU"
+    default_tickers_str = "LMND, HIMS, SOFI, UPST, NVDA, AMD, TSLA, HOOD, OSCR, ROOT"
     # --- !!! END UPDATED TICKERS !!! ---
     ticker_input_str = st.text_area(
         "1. Enter Stock Tickers:", value=default_tickers_str, height=150, key="ticker_input",
